@@ -58,26 +58,9 @@ namespace TelegramBot
                 }
                 if (message.Text.ToLower() == "/readmessage")
                 {
-                    var userId = update.Message.From.Id;
-                    MailUser existingUser = db.Users.FirstOrDefault(u => u.Id == userId);
                     isReadingMessage[message.Chat.Id] = true;
                     await botClient.SendTextMessageAsync(message.Chat, "Сколько сообщений вам вывести?");
-
-                    if (existingUser != null)
-                    {
-                        // чтение сообщений пользователя
-                        var mail = existingUser.mail;
-                        var password = existingUser.password;
-                        mailController.ReadMessage(existingUser.mail, existingUser.password, botClient, message,10);
-                        return;
-                    }
-                    else
-                    {
-                        await botClient.SendTextMessageAsync(message.Chat, "Такого пользователя нет.");
-                        return;
-                    }
-
-
+                    return;
                 }
                 if(message.Text.ToLower() == "/sendmessage")
                 {
@@ -129,7 +112,27 @@ namespace TelegramBot
                         return;
                     }
                 }
+                if (isReadingMessage.ContainsKey(message.Chat.Id) && isReadingMessage[message.Chat.Id] )
+                {
+                    int score = int.Parse(message.Text);
+                    var userId = update.Message.From.Id;
+                    MailUser existingUser = db.Users.FirstOrDefault(u => u.Id == userId);
+                    isReadingMessage[message.Chat.Id] = false;
+                    if (existingUser != null)
+                    {
+                        // чтение сообщений пользователя
+                        var mail = existingUser.mail;
+                        var password = existingUser.password;
+                        mailController.ReadMessage(existingUser.mail, existingUser.password, botClient, message, score);
+                        return;
+                    }
+                    else
+                    {
+                        await botClient.SendTextMessageAsync(message.Chat, "Такого пользователя нет.");
+                        return;
+                    }
 
+                }
 
             }
         }
