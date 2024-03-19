@@ -30,7 +30,9 @@ namespace TelegramBot
             Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(update));
             if (update.Type == Telegram.Bot.Types.Enums.UpdateType.Message)
             {
+                
                 var message = update.Message;
+
                 if (message.Text.ToLower() == "/start")
                 {
                     await botClient.SendTextMessageAsync(message.Chat, "Привет, я телеграмм бот, который поможет перенести тебе твою mail.ru почту в телеграмм");
@@ -46,10 +48,12 @@ namespace TelegramBot
                     {
                         controller.DeleteUser(ref db, ref existingUser);
                         await botClient.SendTextMessageAsync(message.Chat, "Информация о пользователе удалена.");
+                        return;
                     }
                     else
                     {
                         await botClient.SendTextMessageAsync(message.Chat, "Такого пользователя нет.");
+                        return;
                     }
                 }
                 if (message.Text.ToLower() == "/readmessage")
@@ -65,30 +69,35 @@ namespace TelegramBot
                         var mail = existingUser.mail;
                         var password = existingUser.password;
                         mailController.ReadMessage(existingUser.mail, existingUser.password, botClient, message,10);
+                        return;
                     }
                     else
                     {
                         await botClient.SendTextMessageAsync(message.Chat, "Такого пользователя нет.");
+                        return;
                     }
 
 
                 }
                 if(message.Text.ToLower() == "/sendmessage")
                 {
-
+                    return;
                 }
                 if (message.Text.ToLower() == "/create")
                 {
                     isCreatingMessage[message.Chat.Id] = true;
                     await botClient.SendTextMessageAsync(message.Chat, "Введите имя вашей почты:");
+                    return;
+                    
                 }
 
-                else if (isCreatingMessage.ContainsKey(message.Chat.Id) && isCreatingMessage[message.Chat.Id])
+                if (isCreatingMessage.ContainsKey(message.Chat.Id) && isCreatingMessage[message.Chat.Id])
                 {
                     if (!loginInProgress.ContainsKey(message.Chat.Id))
                     {
                         loginInProgress[message.Chat.Id] = message.Text;
                         await botClient.SendTextMessageAsync(message.Chat, "Теперь введите пароль:");
+                        return;
                     }
                     else
                     {
@@ -102,12 +111,14 @@ namespace TelegramBot
                             // Обновление информации о пользователе
                             controller.UpdateUser(ref db, ref existingUser, ref login, ref password);
                             await botClient.SendTextMessageAsync(message.Chat, "Информация о пользователе обновлена.");
+                            
                         }
                         else
                         {
                             // Добавление нового пользователя
                             controller.CreateUser(ref db, ref userId, ref login, ref password);
                             await botClient.SendTextMessageAsync(message.Chat, "Новый пользователь добавлен.");
+
                         }
 
                         // Сброс переменных состояния
@@ -115,6 +126,7 @@ namespace TelegramBot
                         loginInProgress.Remove(message.Chat.Id);
 
                         await botClient.SendTextMessageAsync(message.Chat, "Логин и пароль приняты.");
+                        return;
                     }
                 }
 
