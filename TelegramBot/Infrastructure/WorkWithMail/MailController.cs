@@ -16,23 +16,19 @@ namespace TelegramBot.Infrastructure.WorkWithMail
             {
                 await client.ConnectAsync("imap.mail.ru", 993, true);
                 await client.AuthenticateAsync(mail, password);
-
                 var inbox = client.Inbox;
                 await inbox.OpenAsync(FolderAccess.ReadOnly);
-
-                int count = 0;
-                foreach (var uniqueId in await inbox.SearchAsync(SearchQuery.All))
+                int messageCount = inbox.Count;
+                for (int i = Math.Max(messageCount - size + 1, 1); i <= messageCount; i++) // Читаем последние 'size' сообщений
                 {
-                    if (++count > size)
-                        break;
-
-                    var mimeMessage = await inbox.GetMessageAsync(uniqueId);
+                    var mimeMessage = await inbox.GetMessageAsync(i);
                     await botClient.SendTextMessageAsync(message.Chat.Id, $"From: {mimeMessage.From} - Subject: {mimeMessage.Subject}");
                 }
-
                 await client.DisconnectAsync(true);
             }
+
         }
+
     }
 }
 
